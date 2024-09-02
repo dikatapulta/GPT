@@ -1,23 +1,38 @@
+import os
 from flask import Flask, request, jsonify
 import openai
 
 app = Flask(__name__)
 
-# Замените 'YOUR_API_KEY' на ваш ключ API OpenAI
-openai.api_key = 'YOUR_API_KEY'
+# Установите ключ API OpenAI
+openai.api_key = 'ВАШ_OPENAI_API_КЛЮЧ'  # Замените 'ВАШ_OPENAI_API_КЛЮЧ' на ваш реальный ключ
 
-@app.route('/ask', methods=['POST'])
+# Замените следующую ссылку на вашу фактическую ссылку на запись
+BOOKING_LINK = "https://alacrity.simplybook.me/v2/"
+
+@app.route('/ask', methods=)
 def ask():
-    user_input = request.json.get('input')
-    
-    # Обращение к API OpenAI
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": user_input}]
-    )
-    
-    answer = response['choices'][0]['message']['content']
-    return jsonify({'response': answer})
+    data = request.json
+    user_question = data.get("question")
+
+    # Обработка вопроса с использованием GPT-4o Mini
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": user_question}
+            ]
+        )
+
+        assistant_reply = response.choices.message  # Исправлено, чтобы правильно получить ответ
+
+        # Ответ с добавленной ссылкой на запись
+        answer_with_booking = f"{assistant_reply}\nЗаписаться можно по ссылке: {BOOKING_LINK}"
+
+        return jsonify({"response": answer_with_booking}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
